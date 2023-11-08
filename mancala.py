@@ -12,7 +12,7 @@ def get_move():
 
 
 def show_board(state):
-  os.system('clear')
+  # os.system('clear')
   print("+-----+------+------+------+------+------+------+-----+")
   comp_display = f"|     |{state['computer-pits'][5]:^6}|{state['computer-pits'][4]:^6}|{state['computer-pits'][3]:^6}|{state['computer-pits'][2]:^6}|{state['computer-pits'][1]:^6}|{state['computer-pits'][0]:^6}|     |"
   print(comp_display)
@@ -23,8 +23,30 @@ def show_board(state):
   print("          a      b      c     d       f     e          ")
 
 
+def do_move(state, move):
+  new_state = state.copy()
+  print(new_state)
+  if new_state["turn"] == "human":
+    new_state["turn"] = "computer"
+  else:
+    new_state["turn"] = "human"
+  print(new_state)
+  if move == "b":
+    current_pit = state["human-pits"][1]
+    new_state["human-pits"][1] = 0
+  print(new_state)
+  return new_state
+
+
+
+# initialize
 state = {"turn":"human", "human-store":0, "human-pits":[3,3,3,3,3,3], "computer-store":0, "computer-pits":[3,3,3,3,3,3]}
 show_board(state)
-get_move()
-show_board(state)
+end = False
+while not end:
+  move = get_move()
+  state = do_move(state, move)
+  show_board(state)
+  if True:
+    end = True
 # Need a function to show the board
