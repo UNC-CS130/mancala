@@ -3,24 +3,28 @@ import os
 
 
 def get_move():
-  move = input("Which pit do you want to select? [1-6]")
-  if move in ["1","2","3","4","5","6"]:
+  move = input("Which pit do you want to select? [a-e]")
+  if move in ["a","b","c","d","e","f"]:
     return move
   else:
-    print("Invalid Input.  Please only enter a number from 1 to 6.")
+    print("Invalid Input.  Please only enter a letter from a to e.")
     return get_move()
 
 
-def board(state):
+def show_board(state):
   os.system('clear')
-  print("--|"+"       |"*6+"|--")
-  print("  |"+"       |"*6+"   ")
-  print("  |"+"=======|"*6+"   ")
-  print("  |"+"       |"*6+"   ")
-  print("--|"+"       |"*6+"|--")
+  print("+-----+------+------+------+------+------+------+-----+")
+  comp_display = f"|     |{state['computer-pits'][5]:^6}|{state['computer-pits'][4]:^6}|{state['computer-pits'][3]:^6}|{state['computer-pits'][2]:^6}|{state['computer-pits'][1]:^6}|{state['computer-pits'][0]:^6}|     |"
+  print(comp_display)
+  print(f"|{state['computer-store']:^5}|------|------|------|------|------|------|{state['human-store']:^5}|")
+  human_display = f"|     |{state['human-pits'][0]:^6}|{state['human-pits'][1]:^6}|{state['human-pits'][2]:^6}|{state['human-pits'][3]:^6}|{state['human-pits'][4]:^6}|{state['human-pits'][5]:^6}|     |"
+  print(human_display)
+  print("+-----+------+------+------+------+------+------+-----+")
+  print("          a      b      c     d       f     e          ")
 
-state = ""
-board(state)
+
+state = {"turn":"human", "human-store":0, "human-pits":[3,3,3,3,3,3], "computer-store":0, "computer-pits":[3,3,3,3,3,3]}
+show_board(state)
 get_move()
-board(state)
+show_board(state)
 # Need a function to show the board
