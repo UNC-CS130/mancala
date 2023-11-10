@@ -1,14 +1,20 @@
 # main file for game
 import os
+import random
 import utils
 
-def get_move():
-    choice = input("Which pit do you want to select? [a-f, or q to quit] ")
-    if choice in ["a", "b", "c", "d", "e", "f", "q"]:
-        return choice
+def get_move(player):
+    if player == "human":
+        choice = input("Which pit do you want to select? [a-f, or q to quit] ")
+        if choice in ["a", "b", "c", "d", "e", "f", "q"]:
+            return choice
+        else:
+            print("Invalid Input.  Please only enter a letter from a to f.")
+            return get_move()
     else:
-        print("Invalid Input.  Please only enter a letter from a to f.")
-        return get_move()
+        choices = ["a", "b", "c", "d", "e", "f"]
+        choice = random.choice(choices)
+        return choice
 
 
 def show_board(state):
@@ -36,11 +42,17 @@ def swap_turn(state):
 def steal(board, end_pit, player):
     if board[end_pit] == 1:
         if player == "human" and end_pit < 6:
-            # Do something
-            pass
-        elif player == "computer" and 6 < endpit < 13:
-            # Do something else
-            pass
+            # Do something, say end_pit = 4, this is across from pit 8
+            # 0 -> 12, 1 -> 11, 2 -> 10, 3 -> 9, 4 -> 8, 5 -> 7
+            board[end_pit] = 0
+            board[6] += 1
+            board[6] += board[12-end_pit]
+            board[12-end_pit] = 0
+        elif player == "computer" and 6 < end_pit < 13:
+            board[end_pit] = 0
+            board[13] += 1
+            board[13] += board[12-end_pit]
+            board[12-end_pit] = 0
     print("Nice work, you stole some stones!")
     return board
 
@@ -57,6 +69,7 @@ def do_move(state, move):
         board[pit] += 1
         stones -= 1
     print(board)
+    board = steal(board, pit, state["turn"])
     state = utils.update_state(state, board)
     print(state)
     #pit is last pit that was dropped into
@@ -67,6 +80,8 @@ def do_move(state, move):
 
 def game_over(state):
     # Check to see if game is over.
+    if max(state["human-pits"]) == 0 or max(state["computer-pits"]) == 0:
+        return True
     return False
 
 
@@ -79,14 +94,11 @@ state = {
     "computer-pits": [1, 2, 3, 3, 3, 3],
 }
 
-# print(state)
-# board = utils.board(state)
-# print(board)
-# print(utils.update_state(state, board))
-# input("Press enter to continue")
+
+
 show_board(state)
 while not game_over(state):
-    move = get_move()
+    move = get_move(state["turn"])
     if move == "q":
         break
     state = do_move(state, move)
