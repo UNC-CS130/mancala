@@ -13,7 +13,8 @@ def get_move(player):
             return get_move()
     else:
         choices = ["a", "b", "c", "d", "e", "f"]
-        choice = random.choice(choices)
+        weights = [10, 10, 10, 10, 10, 10]
+        choice = random.choices(choices, weights=weights, k=1)[0]
         return choice
 
 
@@ -58,20 +59,18 @@ def steal(board, end_pit, player):
 
 def do_move(state, move):
     board = utils.board(state)
-    print(board)
     pit = utils.pit_number(move)
     if state["turn"] == "computer":
         pit += 7
+        computer_moves[tuple(board)] = move
     stones = board[pit]
     board[pit] = 0
     while stones > 0:
         pit = (pit + 1) % 14
         board[pit] += 1
         stones -= 1
-    print(board)
     board = steal(board, pit, state["turn"])
     state = utils.update_state(state, board)
-    print(state)
     #pit is last pit that was dropped into
     if not (pit == 6 and state["turn"] == "human") and not (pit == 13 and state["turn"] == "computer"):
         state = swap_turn(state)
@@ -85,17 +84,28 @@ def game_over(state):
     return False
 
 
+def get_winner(state):
+    human_score = sum(state['human-pits'])+state['human-store']
+    computer_score = sum(state['computer-pits'])+state['computer-store']
+    print(f"human score is {human_score}")
+    print(f"computer score is {computer_score}")
+    if human_score > computer_score:
+        return "human"
+    elif computer_score > human_score:
+        return "computer"
+    else:
+        return "tie"
+
 # initialize
 state = {
-    "turn": "human",
+    "turn": "computer",
     "human-store": 0,
-    "human-pits": [1, 2, 3, 3, 3, 3],
+    "human-pits": [3, 3, 3, 3, 3, 3],
     "computer-store": 0,
-    "computer-pits": [1, 2, 3, 3, 3, 3],
+    "computer-pits": [3, 3, 3, 3, 3, 3],
 }
 
-
-
+computer_moves = {}
 show_board(state)
 while not game_over(state):
     move = get_move(state["turn"])
@@ -103,5 +113,9 @@ while not game_over(state):
         break
     state = do_move(state, move)
     show_board(state)
-
+winner = get_winner(state)
+print(f"The winner is... {winner.upper()}")
+computer_moves["winner"] = winner
+with open("game_history.txt", "a") as f:
+    print(computer_moves, file=f)
 
