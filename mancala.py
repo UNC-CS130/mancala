@@ -2,24 +2,41 @@
 import os
 import random
 import utils
+import time
 
-def get_move(player):
-    if player == "human":
+def read_weights():
+    with open("weights.txt", "r") as f:
+        weights = eval(f.readlines()[-1].strip())
+    return weights
+
+
+WEIGHTS = read_weights()
+DEFAULT_WEIGHTS = [10, 10, 10, 10, 10, 10]
+
+
+def get_move(state):
+    if state['turn'] == "human":
         choice = input("Which pit do you want to select? [a-f, or q to quit] ")
         if choice in ["a", "b", "c", "d", "e", "f", "q"]:
             return choice
         else:
             print("Invalid Input.  Please only enter a letter from a to f.")
-            return get_move()
+            return get_move(state)
     else:
         choices = ["a", "b", "c", "d", "e", "f"]
-        weights = [10, 10, 10, 10, 10, 10]
+        board = utils.board(state)
+        if tuple(board) in WEIGHTS:
+            weights = WEIGHTS[tuple(board)]
+        else:
+            weights = DEFAULT_WEIGHTS
         choice = random.choices(choices, weights=weights, k=1)[0]
+        # Ensure computer picks a pit with some stones in it.
+        while state["computer-pits"][utils.pit_number(choice)] == 0:
+            choice = random.choices(choices, weights=weights, k=1)[0]
         return choice
 
 
 def show_board(state):
-    # os.system("clear")
     print("+-----+------+------+------+------+------+------+-----+")
     comp_display = f"|     |{state['computer-pits'][5]:^6}|{state['computer-pits'][4]:^6}|{state['computer-pits'][3]:^6}|{state['computer-pits'][2]:^6}|{state['computer-pits'][1]:^6}|{state['computer-pits'][0]:^6}|     |"
     print(comp_display)
@@ -30,7 +47,6 @@ def show_board(state):
     print(human_display)
     print("+-----+------+------+------+------+------+------+-----+")
     print("         a      b      c      d      e      f          ")
-    print(f"It's your turn, {state['turn']}")
 
 
 def swap_turn(state):
@@ -39,6 +55,7 @@ def swap_turn(state):
     else:
         state["turn"] = "human"
     return state
+
 
 def steal(board, end_pit, player):
     if board[end_pit] == 1:
@@ -49,12 +66,13 @@ def steal(board, end_pit, player):
             board[6] += 1
             board[6] += board[12-end_pit]
             board[12-end_pit] = 0
+            print("Shoot! you stole some stones!")
         elif player == "computer" and 6 < end_pit < 13:
             board[end_pit] = 0
             board[13] += 1
             board[13] += board[12-end_pit]
             board[12-end_pit] = 0
-    print("Nice work, you stole some stones!")
+            print("HA! I stole your stones!")
     return board
 
 def do_move(state, move):
@@ -63,6 +81,13 @@ def do_move(state, move):
     if state["turn"] == "computer":
         pit += 7
         computer_moves[tuple(board)] = move
+        print(f"Let's see, what should I play...")
+        time.sleep(2)
+        print(f"I think I'll play {move}!")
+        time.sleep(2)
+    else:
+        os.system("clear")
+        print(f"You chose {move}.")
     stones = board[pit]
     board[pit] = 0
     while stones > 0:
@@ -74,6 +99,9 @@ def do_move(state, move):
     #pit is last pit that was dropped into
     if not (pit == 6 and state["turn"] == "human") and not (pit == 13 and state["turn"] == "computer"):
         state = swap_turn(state)
+    else:
+        print(f"By ending in their store, {state['turn']} gets to go again.")
+        time.sleep(1)
     return state
 
 
@@ -81,6 +109,7 @@ def game_over(state):
     # Check to see if game is over.
     if max(state["human-pits"]) == 0 or max(state["computer-pits"]) == 0:
         return True
+    print("Next up: ", state["turn"])
     return False
 
 
@@ -108,9 +137,9 @@ state = {
 computer_moves = {}
 show_board(state)
 while not game_over(state):
-    move = get_move(state["turn"])
+    move = get_move(state)
     if move == "q":
-        break
+        exit()
     state = do_move(state, move)
     show_board(state)
 winner = get_winner(state)
