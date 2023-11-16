@@ -82,9 +82,9 @@ def do_move(state, move):
         pit += 7
         computer_moves[tuple(board)] = move
         print(f"Let's see, what should I play...")
-        time.sleep(2)
+        time.sleep(1)
         print(f"I think I'll play {move}!")
-        time.sleep(2)
+        time.sleep(1)
     else:
         os.system("clear")
         print(f"You chose {move}.")
@@ -101,7 +101,7 @@ def do_move(state, move):
         state = swap_turn(state)
     else:
         print(f"By ending in their store, {state['turn']} gets to go again.")
-        time.sleep(1)
+        time.sleep(.5)
     return state
 
 
