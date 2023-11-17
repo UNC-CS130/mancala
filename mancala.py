@@ -147,4 +147,3 @@ print(f"The winner is... {winner.upper()}")
 computer_moves["winner"] = winner
 with open("game_history.txt", "a") as f:
     print(computer_moves, file=f)
-
