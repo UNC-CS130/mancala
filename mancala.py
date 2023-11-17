@@ -17,12 +17,18 @@ DEFAULT_WEIGHTS = [10, 10, 10, 10, 10, 10]
 
 def get_move(state):
     if state["turn"] == "human":
-        choice = input("Which pit do you want to select? [a-f, or q to quit] ")
-        if choice in ["a", "b", "c", "d", "e", "f", "q"]:
-            return choice
-        else:
-            print("Invalid Input.  Please only enter a letter from a to f.")
-            return get_move(state)
+        while True:
+            choice = input("Which pit do you want to select? [a-f, q to quit, or r for rules] ").lower()
+            if choice in ["a", "b", "c", "d", "e", "f", "q", "r"]:
+                pit_number = utils.pit_number(choice)
+                if choice == "r": 
+                    utils.mancala_rules()
+                elif state["human-pits"][pit_number] > 0: #Updated get_move to handle a "zero" pit in human pits
+                    return choice
+                else:
+                    print("Invalid Input. The selected pit is empty. Please choose a pit with stones.")
+            else:
+                print("Invalid Input. Please only enter a letter from a to f.")
     else:
         choices = ["a", "b", "c", "d", "e", "f"]
         board = utils.board(state)
@@ -134,8 +140,11 @@ def get_winner(state):
     else:
         return "tie"
 
+#SUGGESTION: Add a while loop that allows for the player to play as many times as they want instead of
+# Having to restart the entire program.
 
-# initialize
+# Initialize
+print("\nWelcome to Malcala!")
 state = {
     "turn": "computer",
     "human-store": 0,
@@ -145,6 +154,19 @@ state = {
 }
 
 computer_moves = {}
+
+# Check if the player wants to read the rules
+rules_input = input("If you do not know how to play please type 'rules' to read the rules. Otherwise, press Enter to start the game: ").lower()
+if rules_input == "rules":
+    utils.mancala_rules()
+    ready_input = input("Are you ready to start the game? (yes/no): ").lower()
+    while ready_input != "yes":
+        ready_input = input("Are you ready to start the game? (yes/no): ").lower()
+
+
+
+# Game loop
+print("\nPlayers ready! Starting Game!")
 show_board(state)
 while not game_over(state):
     move = get_move(state)
@@ -152,8 +174,12 @@ while not game_over(state):
         exit()
     state = do_move(state, move)
     show_board(state)
+
+# Display the winner
 winner = get_winner(state)
 print(f"The winner is... {winner.upper()}")
 computer_moves["winner"] = winner
+
+# Save game history
 with open("game_history.txt", "a") as f:
     print(computer_moves, file=f)
