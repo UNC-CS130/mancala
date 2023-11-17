@@ -32,6 +32,8 @@ for game in games:
         # update weights based on winner
         if game["winner"] == "human":
             weights[state][utils.pit_number(game[state])] += rewards["lose"]
+            if weights[state][utils.pit_number(game[state])] < 1:
+                weights[state][utils.pit_number(game[state])] = 1
         elif game["winner"] == "computer":
             weights[state][utils.pit_number(game[state])] += rewards["win"]
         else:
