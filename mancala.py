@@ -4,6 +4,7 @@ import random
 import utils
 import time
 
+
 def read_weights():
     with open("weights.txt", "r") as f:
         weights = eval(f.readlines()[-1].strip())
@@ -15,7 +16,7 @@ DEFAULT_WEIGHTS = [10, 10, 10, 10, 10, 10]
 
 
 def get_move(state):
-    if state['turn'] == "human":
+    if state["turn"] == "human":
         choice = input("Which pit do you want to select? [a-f, or q to quit] ")
         if choice in ["a", "b", "c", "d", "e", "f", "q"]:
             return choice
@@ -64,16 +65,17 @@ def steal(board, end_pit, player):
             # 0 -> 12, 1 -> 11, 2 -> 10, 3 -> 9, 4 -> 8, 5 -> 7
             board[end_pit] = 0
             board[6] += 1
-            board[6] += board[12-end_pit]
-            board[12-end_pit] = 0
+            board[6] += board[12 - end_pit]
+            board[12 - end_pit] = 0
             print("Shoot! you stole some stones!")
         elif player == "computer" and 6 < end_pit < 13:
             board[end_pit] = 0
             board[13] += 1
-            board[13] += board[12-end_pit]
-            board[12-end_pit] = 0
+            board[13] += board[12 - end_pit]
+            board[12 - end_pit] = 0
             print("HA! I stole your stones!")
     return board
+
 
 def do_move(state, move):
     board = utils.board(state)
@@ -96,26 +98,33 @@ def do_move(state, move):
         stones -= 1
     board = steal(board, pit, state["turn"])
     state = utils.update_state(state, board)
-    #pit is last pit that was dropped into
-    if not (pit == 6 and state["turn"] == "human") and not (pit == 13 and state["turn"] == "computer"):
+    # pit is last pit that was dropped into
+    if not (pit == 6 and state["turn"] == "human") and not (
+        pit == 13 and state["turn"] == "computer"
+    ):
         state = swap_turn(state)
     else:
         print(f"By ending in their store, {state['turn']} gets to go again.")
-        time.sleep(.5)
+        time.sleep(0.5)
     return state
 
 
 def game_over(state):
     # Check to see if game is over.
-    if max(state["human-pits"]) == 0 or max(state["computer-pits"]) == 0:
+    if (
+        max(state["human-pits"]) == 0
+        or max(state["computer-pits"]) == 0
+        or state["human-store"] > 18
+        or state["computer-store"] > 18
+    ):
         return True
     print("Next up: ", state["turn"])
     return False
 
 
 def get_winner(state):
-    human_score = sum(state['human-pits'])+state['human-store']
-    computer_score = sum(state['computer-pits'])+state['computer-store']
+    human_score = sum(state["human-pits"]) + state["human-store"]
+    computer_score = sum(state["computer-pits"]) + state["computer-store"]
     print(f"human score is {human_score}")
     print(f"computer score is {computer_score}")
     if human_score > computer_score:
@@ -124,6 +133,7 @@ def get_winner(state):
         return "computer"
     else:
         return "tie"
+
 
 # initialize
 state = {
