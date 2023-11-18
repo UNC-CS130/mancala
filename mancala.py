@@ -21,14 +21,19 @@ def get_move(state):
             choice = input("Which pit do you want to select? [a-f, q to quit, or r for rules] ").lower()
             if choice in ["a", "b", "c", "d", "e", "f", "q", "r"]:
                 pit_number = utils.pit_number(choice)
-                if choice == "r": 
+                if choice == "q":
+                    print("You left the game.")
+                    exit()
+                elif choice == "r": 
                     utils.mancala_rules()
                 elif state["human-pits"][pit_number] > 0: #Updated get_move to handle a "zero" pit in human pits
                     return choice
                 else:
                     print("Invalid Input. The selected pit is empty. Please choose a pit with stones.")
+                
             else:
                 print("Invalid Input. Please only enter a letter from a to f.")
+            
     else:
         choices = ["a", "b", "c", "d", "e", "f"]
         board = utils.board(state)
@@ -139,6 +144,7 @@ def get_winner(state):
         return "computer"
     else:
         return "tie"
+    
 
 #SUGGESTION: Add a while loop that allows for the player to play as many times as they want instead of
 # Having to restart the entire program.
@@ -179,6 +185,7 @@ while not game_over(state):
 winner = get_winner(state)
 print(f"The winner is... {winner.upper()}")
 computer_moves["winner"] = winner
+
 
 # Save game history
 with open("game_history.txt", "a") as f:
