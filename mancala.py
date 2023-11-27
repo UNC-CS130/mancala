@@ -6,11 +6,12 @@ import time
 
 
 def read_weights():
+    #Read the weights from the file and return as a dictionary
     with open("weights.txt", "r") as f:
         weights = eval(f.readlines()[-1].strip())
     return weights
 
-
+#Global variables
 WEIGHTS = read_weights()
 DEFAULT_WEIGHTS = [10, 10, 10, 10, 10, 10]
 
@@ -18,6 +19,7 @@ DEFAULT_WEIGHTS = [10, 10, 10, 10, 10, 10]
 def get_move(state):
     if state["turn"] == "human":
         while True:
+            # Get user input for the move
             choice = input("Which pit do you want to select? [a-f, q to quit, or r for rules] ").lower()
             if choice in ["a", "b", "c", "d", "e", "f", "q", "r"]:
                 pit_number = utils.pit_number(choice)
@@ -190,3 +192,15 @@ computer_moves["winner"] = winner
 # Save game history
 with open("game_history.txt", "a") as f:
     print(computer_moves, file=f)
+
+def compute_final_score(state):
+    human_score = sum(state["human-pits"]) + state["human-store"]
+    computer_score = sum(state["computer-pits"]) + state["computer-store"]
+    print(f"Human score is {human_score}")
+    print(f"Computer score is {computer_score}")
+    if human_score > computer_score:
+        return "human"
+    elif computer_score > human_score:
+        return "computer"
+    else:
+        return "tie"
