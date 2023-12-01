@@ -4,13 +4,15 @@ import random
 import utils
 import time
 
+TRAINING = "weights.txt"
+
 
 def read_weights():
-    with open("weights.txt", "r") as f:
+    with open(TRAINING, "r") as f:
         weights = eval(f.readlines()[-1].strip())
     return weights
 
-
+computer_moves = {}
 WEIGHTS = read_weights()
 DEFAULT_WEIGHTS = [10, 10, 10, 10, 10, 10]
 
@@ -69,7 +71,7 @@ def swap_turn(state):
     return state
 
 
-def steal(board, end_pit, player):
+def steal(board, end_pit, player, quiet=False):
     if board[end_pit] == 1:
         if player == "human" and end_pit < 6:
             # Do something, say end_pit = 4, this is across from pit 8
@@ -78,36 +80,40 @@ def steal(board, end_pit, player):
             board[6] += 1
             board[6] += board[12 - end_pit]
             board[12 - end_pit] = 0
-            print("Shoot! you stole some stones!")
+            if not quiet:
+                print("Shoot! you stole some stones!")
         elif player == "computer" and 6 < end_pit < 13:
             board[end_pit] = 0
             board[13] += 1
             board[13] += board[12 - end_pit]
             board[12 - end_pit] = 0
-            print("HA! I stole your stones!")
+            if not quiet:
+                print("HA! I stole your stones!")
     return board
 
 
-def do_move(state, move):
+def do_move(state, move, computer_moves=computer_moves, quiet=False):
     board = utils.board(state)
     pit = utils.pit_number(move)
     if state["turn"] == "computer":
         pit += 7
         computer_moves[tuple(board)] = move
-        print(f"Let's see, what should I play...")
-        time.sleep(1)
-        print(f"I think I'll play {move}!")
-        time.sleep(1)
+        if not quiet:
+            print(f"Let's see, what should I play...")
+            time.sleep(1)
+            print(f"I think I'll play {move}!")
+            time.sleep(1)
     else:
-        os.system("clear")
-        print(f"You chose {move}.")
+        if not quiet:
+            os.system("clear")
+            print(f"You chose {move}.")
     stones = board[pit]
     board[pit] = 0
     while stones > 0:
         pit = (pit + 1) % 14
         board[pit] += 1
         stones -= 1
-    board = steal(board, pit, state["turn"])
+    board = steal(board, pit, state["turn"], quiet=quiet)
     state = utils.update_state(state, board)
     # pit is last pit that was dropped into
     if not (pit == 6 and state["turn"] == "human") and not (
@@ -115,12 +121,13 @@ def do_move(state, move):
     ):
         state = swap_turn(state)
     else:
-        print(f"By ending in their store, {state['turn']} gets to go again.")
-        time.sleep(0.5)
+        if not quiet:
+            print(f"By ending in their store, {state['turn']} gets to go again.")
+            time.sleep(0.5)
     return state
 
 
-def game_over(state):
+def game_over(state, quiet=False):
     # Check to see if game is over.
     if (
         max(state["human-pits"]) == 0
@@ -129,15 +136,17 @@ def game_over(state):
         or state["computer-store"] > 18
     ):
         return True
-    print("Next up: ", state["turn"])
+    if not quiet:
+        print("Next up: ", state["turn"])
     return False
 
 
-def get_winner(state):
+def get_winner(state, quiet=False):
     human_score = sum(state["human-pits"]) + state["human-store"]
     computer_score = sum(state["computer-pits"]) + state["computer-store"]
-    print(f"human score is {human_score}")
-    print(f"computer score is {computer_score}")
+    if not quiet:
+        print(f"human score is {human_score}")
+        print(f"computer score is {computer_score}")
     if human_score > computer_score:
         return "human"
     elif computer_score > human_score:
@@ -145,48 +154,57 @@ def get_winner(state):
     else:
         return "tie"
     
-
-#SUGGESTION: Add a while loop that allows for the player to play as many times as they want instead of
-# Having to restart the entire program.
-
-# Initialize
-print("\nWelcome to Malcala!")
-state = {
+def new_game():
+    state = {
     "turn": "computer",
     "human-store": 0,
     "human-pits": [3, 3, 3, 3, 3, 3],
     "computer-store": 0,
     "computer-pits": [3, 3, 3, 3, 3, 3],
-}
+    }
+    return state
 
-computer_moves = {}
 
-# Check if the player wants to read the rules
-rules_input = input("If you do not know how to play please type 'rules' to read the rules. Otherwise, press Enter to start the game: ").lower()
-if rules_input == "rules":
-    utils.mancala_rules()
-    ready_input = input("Are you ready to start the game? (yes/no): ").lower()
-    while ready_input != "yes":
+
+
+def main():
+    #SUGGESTION: Add a while loop that allows for the player to play as many times as they want instead of
+    # Having to restart the entire program.
+
+
+
+    # Initialize
+    print("\nWelcome to Mancala!")
+    state = new_game()
+
+    # Check if the player wants to read the rules
+    rules_input = input("If you do not know how to play please type 'rules' to read the rules. Otherwise, press Enter to start the game: ").lower()
+    if rules_input == "rules":
+        utils.mancala_rules()
         ready_input = input("Are you ready to start the game? (yes/no): ").lower()
+        while ready_input != "yes":
+            ready_input = input("Are you ready to start the game? (yes/no): ").lower()
 
-
-
-# Game loop
-print("\nPlayers ready! Starting Game!")
-show_board(state)
-while not game_over(state):
-    move = get_move(state)
-    if move == "q":
-        exit()
-    state = do_move(state, move)
+    # Game loop
+    print("\nPlayers ready! Starting Game!")
     show_board(state)
+    while not game_over(state):
+        move = get_move(state)
+        if move == "q":
+            exit()
+        state = do_move(state, move)
+        show_board(state)
 
-# Display the winner
-winner = get_winner(state)
-print(f"The winner is... {winner.upper()}")
-computer_moves["winner"] = winner
+    # Display the winner
+    winner = get_winner(state)
+    print(f"The winner is... {winner.upper()}")
+    computer_moves["winner"] = winner
 
 
-# Save game history
-with open("game_history.txt", "a") as f:
-    print(computer_moves, file=f)
+    # Save game history
+    with open("game_history.txt", "a") as f:
+        print(computer_moves, file=f)
+  
+
+if __name__ == "__main__":
+  main()
