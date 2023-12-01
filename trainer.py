@@ -6,12 +6,12 @@ import random
 # Weights for a move with equal likelyhood:
 STORED_WEIGHTS = "trained_weights.txt"
 start_weights = [10, 10, 10, 10, 10, 10]
-rewards = {"win": 10, "lose": -5, "tie": 3}
+rewards = {"win": 2, "lose": .75, "tie": 1.5}
 
 history = []
 
 BATCH_SIZE = 10
-ITERATIONS = 100000
+ITERATIONS = 10000
 
 
 def get_move(state, weights_list):
@@ -26,13 +26,13 @@ def get_move(state, weights_list):
         choices = ["a", "b", "c", "d", "e", "f"]
         board = utils.board(state)
         if tuple(board) in weights_list:
-            weights = weights_list[tuple(board)]
+            tmp_weights = weights_list[tuple(board)]
         else:
-            weights = start_weights
-        choice = random.choices(choices, weights=weights, k=1)[0]
+            tmp_weights = start_weights
+        choice = random.choices(choices, weights=tmp_weights, k=1)[0]
         # Ensure computer picks a pit with some stones in it.
         while state["computer-pits"][utils.pit_number(choice)] == 0:
-            choice = random.choices(choices, weights=weights, k=1)[0]
+            choice = random.choices(choices, weights=tmp_weights, k=1)[0]
         return choice
 
 
@@ -52,7 +52,7 @@ def play_game(game_number, weights):
     return computer_moves
 
 
-def update_weights(games, weights):
+def update_weights(games, new_weights):
     """
     Updates the weights based on the games played.
     """
@@ -61,18 +61,23 @@ def update_weights(games, weights):
             if state == "winner":
                 continue
             # add state to weights if it is not there
-            if state not in weights:
-                weights[state] = start_weights.copy()
+            if state not in new_weights:
+                new_weights[state] = start_weights.copy()
             # update weights based on winner
             if game["winner"] == "human":
-                weights[state][utils.pit_number(game[state])] += rewards["lose"]
-                if weights[state][utils.pit_number(game[state])] < 1:
-                    weights[state][utils.pit_number(game[state])] = 1
+                new_weights[state][utils.pit_number(game[state])] *= rewards["lose"]
+                # if new_weights[state][utils.pit_number(game[state])] < .1:
+                #     new_weights[state][utils.pit_number(game[state])] = .1
             elif game["winner"] == "computer":
-                weights[state][utils.pit_number(game[state])] += rewards["win"]
+                new_weights[state][utils.pit_number(game[state])] *= rewards["win"]
             else:
-                weights[state][utils.pit_number(game[state])] += rewards["tie"]
-    return weights
+                new_weights[state][utils.pit_number(game[state])] *= rewards["tie"]
+            #nomalize weights
+            total = sum(new_weights[state])
+            for i in range(len(new_weights[state])):
+                new_weights[state][i] /= total
+   
+    return new_weights
 
 
 game_num = 0
